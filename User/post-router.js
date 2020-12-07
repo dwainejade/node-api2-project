@@ -1,5 +1,4 @@
 const express = require("express")
-// const posts = require("./post-model")
 const db = require("../data/db")
 
 const router = express.Router()
@@ -81,15 +80,19 @@ router.get("/posts/:id/comments", (req, res) => {
 
 // CREATE NEW COMMENT FOR POST BY ID
 router.post("/posts/:id/comments", (req, res) => {
+
     if (!req.body.text) {
         return res.status(400).json({
             message: "Need a text in the body fam",
         })
     }
 
-    db.insertComment(req.params.id, { text: req.body.text })
+    db.insertComment({ text: req.body.text, post_id: req.params.id })
         .then((comment) => {
-            res.status(201).json(comment)
+            res.status(201).json({
+                post_id: req.params.id,
+                text: req.body.text
+            })
         })
         .catch((err) => {
             console.log(err)
@@ -115,16 +118,22 @@ router.delete("/posts/:id", (req, res) => {
         })
 })
 
+// UPDATE POST BY ID
 router.put("/posts/:id", (req, res) => {
     if (!req.body) {
         return res.status(400)({
             message: "Missing title or contents"
         })
     }
+
     db.update(req.params.id, req.body)
         .then((post) => {
             if (post) {
-                res.status(201).json(post)
+                res.status(201).json({
+                    id: req.params.id,
+                    title: req.body.title,
+                    contents: req.body.contents,
+                })
             } else {
                 res.status(404).json({
                     message: "The post could not be found",
@@ -137,53 +146,6 @@ router.put("/posts/:id", (req, res) => {
                 message: "Error updating the post",
             })
         })
-
 })
-
-// router.put("/users/:id", (req, res) => {
-//     if (!req.body.name || !req.body.email) {
-//         return res.status(400).json({
-//             message: "Missing user name or email",
-//         })
-//     }
-
-//     users.update(req.params.id, req.body)
-//         .then((user) => {
-//             if (user) {
-//                 res.status(200).json(user)
-//             } else {
-//                 res.status(404).json({
-//                     message: "The user could not be found",
-//                 })
-//             }
-//         })
-//         .catch((error) => {
-//             console.log(error)
-//             res.status(500).json({
-//                 message: "Error updating the user",
-//             })
-//         })
-// })
-
-
-// // create endpoint for adding a new post for a user
-// router.post("/users/:userId/posts", (req, res) => {
-//     if (!req.body.text) {
-//         return res.status(400).json({
-//             message: "Need a text in the body fam",
-//         })
-//     }
-
-//     users.addUserPost(req.params.id, { text: req.body.text })
-//         .then((post) => {
-//             res.status(201).json(post)
-//         })
-//         .catch((err) => {
-//             console.log(err)
-//             res.status(500).json({
-//                 message: "Something ain't right. We didn't add the post.",
-//             })
-//         })
-// })
 
 module.exports = router
